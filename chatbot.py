@@ -1,7 +1,7 @@
-import openai
+from groq import Groq
 from prompts import SYSTEM_PROMPT
 
-openai.api_key = "YOUR_API_KEY"
+client = Groq(api_key="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")
 
 conversation = [{"role": "system", "content": SYSTEM_PROMPT}]
 
@@ -15,13 +15,23 @@ def chatbot_response(user_input):
 
     conversation.append({"role": "user", "content": user_input})
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=conversation
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=conversation
+        )
 
-    reply = response.choices[0].message.content
+        reply = response.choices[0].message.content
 
-    conversation.append({"role": "assistant", "content": reply})
+        conversation.append({"role": "assistant", "content": reply})
 
-    return reply
+        return reply
+    
+    except Exception as e:
+        # Remove the user message if API call fails
+        conversation.pop()
+        error_message = str(e)
+        print(f"DEBUG - Full Error: {error_message}")  # Debug line
+        
+        # Return the actual error message to see what's wrong
+        return f"Error: {error_message}"
